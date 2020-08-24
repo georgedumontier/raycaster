@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Raycaster</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      background: #282c34;
+      overflow: hidden;
+    }
+
+    canvas {
+      padding-left: 0;
+      padding-right: 0;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="150" height="150"></canvas>
+  <script src='Player.js'></script>
+  <script src='map.js'></script>
+  <script src='Controls.js'></script>
+  <script src='sizeCanvas.js'></script>
+  <script src='Ray.js'></script>
+
+  <script>
+    // init variables
+    const CIRCLE = Math.PI * 2
+    const gridSize = 8
+    const ctx = document.getElementById("canvas").getContext("2d");
+    let lastTime
+    let width
+    let height
+    let stop = false
+    let now = Date.now()
+    let in3D = false
+    let blockWidth
+    let blockHeight
+    let fov = 1
+
+
+    const player = new Player(150, 150, 0)
+    const controls = new Controls()
+
+    function drawMap() {
+      map.forEach((type, i) => {
+        ctx.beginPath()
+        let startX = (i % 8) * blockSize
+        let startY = Math.floor(i / 8) * blockSize
+        ctx.rect(startX, startY, blockSize, blockSize)
+        ctx.closePath()
+        ctx.strokeStyle = 'white'
+        ctx.stroke()
+        ctx.fillStyle = type === 1 ? '#beeeef' : 'black'
+        ctx.fill()
+      })
+    }
+
+    function drawPlayer() {
+      ctx.save() // saves the original rotation
+
+      // ctx.translate(player.x - 25, player.y) // translate to center(ish) of triangle
+      // ctx.rotate(player.direction) // rotate around the center of the triangle
+      // ctx.translate(-(player.x - 25), -player.y) // translate back to the origin
+      ctx.translate(player.x, player.y)
+      ctx.rotate(player.direction)
+      ctx.translate(-(player.x), -player.y)
+
+      // draw a triangle
+      ctx.beginPath()
+      ctx.moveTo(player.x, player.y);
+      ctx.lineTo(player.x - 50, player.y + 20);
+      ctx.lineTo(player.x - 50, player.y - 20);
+      ctx.closePath()
+      ctx.fillStyle = '#00cc00'
+      ctx.fill()
+
+      ctx.restore() // sets rotation back to where it was when we called save()
+    }
+
+    function drawRays() {
+      for (let i = (-fov / 2); i < (fov / 2); i++) {
+        let ray = new Ray(player.x, player.y, (player.direction + (i * Math.PI / 180)))
+        drawRay(ray)
+      }
+    }
+
+    function drawRay(ray) {
+      // let endX = ray.x + 1000 * Math.cos(ray.direction)
+      // let endY = ray.y + 1000 * Math.sin(ray.direction)
+      let [endX, endY] = ray.collide()
+      ctx.beginPath()
+      ctx.moveTo(ray.x, ray.y)
+      ctx.lineTo(endX, endY)
+      ctx.closePath()
+      ctx.strokeStyle = 'red'
+      ctx.stroke()
+    }
+
+    function render2D() {
+      ctx.clearRect(0, 0, width, height);
+      drawMap()
+      drawPlayer()
+      drawRays()
+    }
+
+    // Main animation loop
+    function animationLoop() {
+      if (!lastTime) { lastTime = now; }
+      now = Date.now()
+      let dt = now - lastTime
+      player.update(dt)
+
+      if (!stop) {
+        if (in3D) {
+          draw3D()
+        } else {
+          render2D()
+        }
+      }
+
+      lastTime = Date.now()
+      // Schedule the next frame
+      window.requestAnimationFrame(animationLoop);
+    }
+
+    window.onload = () => {
+      window.addEventListener("resize", sizeCanvas, false);
+      sizeCanvas();
+      // Schedule the main animation loop
+      window.requestAnimationFrame(animationLoop);
+    };
+  </script>
+</body>
+
+</html>
