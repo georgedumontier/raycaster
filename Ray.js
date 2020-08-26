@@ -2,7 +2,25 @@ function Ray(x, y, direction) {
   this.x = x
   this.y = y
   this.direction = direction
-  this.intersection = null
+  this.findIntersect = function(x, y, dx, dy, isUp, isLeft) {
+      // should be able to use the point slope formula
+      // y − y1 = m(x − x1)
+      let interceptX = {}
+      interceptX.y = isUp ? y - dy : y + dy
+      interceptX.x = ((interceptX.y - y) / Math.tan(this.direction)) + x
+      interceptX.dist = Math.sqrt(Math.pow(interceptX.x - x, 2) + Math.pow(interceptX.x - x, 2))
+
+      // vertical lines
+      let interceptY = {}
+      interceptY.x = isLeft ? x - dx : x + dx
+      interceptY.y = ((interceptY.x - x) * Math.tan(this.direction)) + y
+      interceptY.dist = Math.sqrt(Math.pow(interceptY.x - x, 2) + Math.pow(interceptY.x - x, 2))
+
+      return interceptX.dist < interceptY.dist ? [interceptX.x, interceptX.y] : [interceptY.x, interceptY.y]
+    }
+  this.hitWall = function() {
+
+  }
   this.collide = function () {
     /*
     **The idea is to check each block that our ray passes through to see if it's a wall**
@@ -14,38 +32,26 @@ function Ray(x, y, direction) {
     - if you still don't have a wall, run it again but with the next two intersections
     */
     // constants
-    let currColumn = Math.floor(player.x / blockSize) // column containing player
-    let currRow = Math.floor(player.y / blockSize) // row containing player
+    let currColumn = Math.floor(this.x / blockSize) // column containing player
+    let currRow = Math.floor(this.y / blockSize) // row containing player
     let isLeft = this.direction > (Math.PI / 2) && this.direction < (Math.PI * 3 / 2) // looking left
     let isUp = this.direction > (Math.PI) // looking right
-    let dx = isLeft ? player.x - currColumn * blockSize : (currColumn + 1) * blockSize - player.x // horizontal distance to intersection
-    let dy = isUp ? player.y - currRow * blockSize : (currRow + 1) * blockSize - player.y // vertical distance to intersection
-    let xInterceptDist = Math.abs((dy / (Math.cos(this.direction)))) // distance to x axis intersection
-    let yInterceptDist = Math.abs((dx / (Math.cos(this.direction)))) // distance to Y axis intersection
+    let dx = isLeft ? this.x - currColumn * blockSize : (currColumn + 1) * blockSize - this.x // horizontal distance to intersection
+    let dy = isUp ? this.y - currRow * blockSize : (currRow + 1) * blockSize - this.y // vertical distance to intersection
+    // let xInterceptDist = Math.abs((dy / (Math.cos(this.direction)))) // distance to intersection on the x axis
+    // let yInterceptDist = Math.abs((dx / (Math.cos(this.direction)))) // distance to intersection on the y axis
+    // if(isUp){ yInterceptDist = Math.abs((dx/(Math.cos(Math.PI - this.direction))))}
 
-    let nextInterceptDist = xInterceptDist < yInterceptDist ? xInterceptDist : yInterceptDist
-    function findIntersect(x, y, direction) {
-      // console.log(xInterceptDist < yInterceptDist)
-      // should be able to use the point slope formula
-      // y − y1 = m(x − x1)
-      // interceptY - y = tan(direction) * (interceptX - x)
-      let interceptX = 0
-      let interceptY = 0
-      if(nextInterceptDist === xInterceptDist){ // horizontal line intersection
-        interceptY = isUp ? y - dy : y + dy
-        interceptX = ((interceptY - y) * Math.tan(direction)) + x
+    // let nextInterceptDist = xInterceptDist <= yInterceptDist ? xInterceptDist : yInterceptDist
 
-      } else { // vertical line intersection
-        interceptX = isLeft ? x - dx : x + dx
-        interceptY = ((interceptX - x) * Math.tan(direction)) + y
+    // console.log(`direction: ${this.direction} - isLeft:${isLeft}, isUp: ${isUp} -- dx: ${dx}, dy: ${dy}`)
 
-      }
-
-
-      return [interceptX, interceptY]
-    }
-    console.log(`${currColumn} , ${currRow} - isLeft:${isLeft}, isUp: ${isUp} -- dx: ${dx}, dy: ${dy} -- Intercepts: ${xInterceptDist} , ${yInterceptDist} ${xInterceptDist < yInterceptDist ? 'horizontal line' : 'vertical line'}`)
-    return findIntersect(this.x, this.y, this.direction)
+    let xSkip = this.x
+    let ySkip = this.y
+    return this.findIntersect(xSkip, ySkip, dx, dy, isUp, isLeft)
+    // this.findIntersect
+    //  if this.hitWall return coords
+    // else add a skip and run it again until we find one
 
 
   }
