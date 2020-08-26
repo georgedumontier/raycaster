@@ -2,20 +2,34 @@ function Ray(x, y, direction) {
   this.x = x
   this.y = y
   this.direction = direction
-  this.findXIntersect = function(x, y, dy, isUp){
-      // use the point slope formula
-      // y − y1 = m(x − x1)
-      let interceptX = {}
-      interceptX.y = isUp ? y - dy : y + dy
-      interceptX.x = ((interceptX.y - y) / Math.tan(this.direction)) + x
-      interceptX.dist = Math.sqrt(Math.pow(interceptX.x - x, 2) + Math.pow(interceptX.x - x, 2))
+  this.findXIntersect = function(x, y, dy, isUp, skip){
+    // use the point slope formula
+    // y − y1 = m(x − x1)
+    let interceptX = {}
+    interceptX.y = (skip * blockSize) + (isUp ? y - dy : y + dy)
+    let slope = Math.tan(this.direction)
+    slope = parseFloat(slope.toFixed(2))
+    if (slope == 0.00) {
+      interceptX.dist = 999999999
       return interceptX
+    }
+    interceptX.x = ((interceptX.y - y) / slope) + x
+    interceptX.dist = Math.sqrt(Math.pow(interceptX.x - x, 2) + Math.pow(interceptX.x - x, 2))
+
+
+    return interceptX
   }
-  this.findYIntersect = function(x, y, dx, isLeft){
+  this.findYIntersect = function(x, y, dx, isLeft, skip){
+
     // vertical lines
     let interceptY = {}
-    interceptY.x = isLeft ? x - dx : x + dx
-    interceptY.y = ((interceptY.x - x) * Math.tan(this.direction)) + y
+    interceptY.x = (skip * blockSize) + (isLeft ? x - dx : x + dx)
+    let slope = Math.tan(this.direction)
+    if (slope == 1.00 || slope == -1.00) {
+      interceptY.dist = 9999999
+      return interceptY
+    }
+    interceptY.y = ((interceptY.x - x) * slope) + y
     interceptY.dist = Math.sqrt(Math.pow(interceptY.x - x, 2) + Math.pow(interceptY.x - x, 2))
     return interceptY
 
@@ -49,6 +63,7 @@ function Ray(x, y, direction) {
     return map[yBlock * gridSize + xBlock] === 1
   }
   this.collide = function () {
+
     /*
     **The idea is to check each block that our ray passes through to see if it's a wall**
     - Find where our ray intersects the nearest vertical line (the left or right edges of my blocks)
@@ -73,23 +88,32 @@ function Ray(x, y, direction) {
 
     // console.log(`direction: ${this.direction} - isLeft:${isLeft}, isUp: ${isUp} -- dx: ${dx}, dy: ${dy}`)
 
-    let xSkip = this.x
-    let ySkip = this.y
-    let xIntersect = this.findXIntersect(xSkip, ySkip, dy, isUp)
-    let yIntersect = this.findYIntersect(xSkip, ySkip, dx, isLeft)
+    let xSkip = 0
+    let ySkip = 0
+    let xIntersect = this.findXIntersect(this.x, this.y, dy, isUp, 0)
+    let yIntersect = this.findYIntersect(this.x, this.y, dx, isLeft, 0)
+    let coords = null
+    while(!coords){
 
-    if(xIntersect.dist < yIntersect.dist) {
-      if(this.hitWallX(xIntersect.x, xIntersect.y)){
-        console.log(true)
+      if(xIntersect.dist < yIntersect.dist) {
+        if(this.hitWallX(xIntersect.x, xIntersect.y)){
+          coords = [xIntersect.x, xIntersect.y]
+        } else {
+          ySkip++
+          xIntersect = this.findXIntersect(this.x, this.y, dy, isUp, ySkip)
+        }
+      }
+      else{
+        if(this.hitWallY(yIntersect.x, yIntersect.y)){
+          coords = [yIntersect.x, yIntersect.y]
+        } else{
+          xSkip++
+          yIntersect = this.findYIntersect(this.x, this.y, dx, isLeft, xSkip)
+        }
       }
     }
-    else{
-      if(this.hitWallY(yIntersect.x, yIntersect.y)){
-        console.log(true)
-      }
-    }
 
-    return xIntersect.dist < yIntersect.dist ? [xIntersect.x, xIntersect.y] : [yIntersect.x, yIntersect.y]
+    return coords
     // this.findIntersect
     //  if this.hitWall return coords
     // else add a skip and run it again until we find one
