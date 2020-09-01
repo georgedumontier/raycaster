@@ -43,10 +43,11 @@
     let blockWidth
     let blockHeight
     let fov = 1
+    let player
+    let controls
 
 
-    const player = new Player(150, 150, 6.3 * Math.PI / 2)
-    const controls = new Controls()
+
 
     function drawMap() {
       map.forEach((type, i) => {
@@ -95,19 +96,24 @@
       // let endX = ray.x + 1000 * Math.cos(ray.direction)
       // let endY = ray.y + 1000 * Math.sin(ray.direction)
       let [endX, endY] = ray.collide()
+      // ray.collide()
       ctx.beginPath()
       ctx.moveTo(ray.x, ray.y)
       ctx.lineTo(endX, endY)
       ctx.closePath()
       ctx.strokeStyle = 'red'
       ctx.stroke()
+
     }
+
+
 
     function render2D() {
       ctx.clearRect(0, 0, width, height);
       drawMap()
       drawPlayer()
       drawRays()
+
     }
 
     // Main animation loop
@@ -133,6 +139,8 @@
     window.onload = () => {
       window.addEventListener("resize", sizeCanvas, false);
       sizeCanvas();
+      player = new Player(blockSize + 5, blockSize + 5, 0)
+      controls = new Controls()
       // Schedule the main animation loop
       window.requestAnimationFrame(animationLoop);
     };
