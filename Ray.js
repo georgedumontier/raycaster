@@ -53,11 +53,13 @@ function Ray(x, y, direction) {
   this.hitWallY = function(x, y) {
       let xBlock = Math.floor(x / blockSize) + (player.x > x ? -1 : 0)
       let yBlock = Math.floor(y / blockSize)
+      if(map[yBlock * gridSize + xBlock] === 1) console.log(`${xBlock}, ${yBlock}`)
       return map[yBlock * gridSize + xBlock] === 1
   }
   this.hitWallX = function(x, y) {
     let xBlock =  Math.floor(x / blockSize)
     let yBlock = Math.floor(y / blockSize) + (player.y > y ? -1 : 0)
+    if(map[yBlock * gridSize + xBlock] === 1) console.log(`${xBlock},  ${yBlock}`)
     return map[yBlock * gridSize + xBlock] === 1
   }
   this.getNextXIntersect = function(lastXIntersect, xStep, isLeft, isUp){
@@ -69,8 +71,9 @@ function Ray(x, y, direction) {
     }
     newXIntercept.x = lastXIntersect.x + xStep
 
-    newXIntercept.y = lastXIntersect.y + blockSize
+    newXIntercept.y = isUp ? lastXIntersect.y - blockSize : lastXIntersect.y + blockSize
     newXIntercept.dist = Math.sqrt(Math.pow(newXIntercept.x - lastXIntersect.x, 2) + Math.pow(newXIntercept.y - lastXIntersect.y, 2))
+    // newXIntercept.dist = 99999999
     return newXIntercept
 
   }
@@ -81,11 +84,10 @@ function Ray(x, y, direction) {
       newYIntercept.dist = 99999999
       return newYIntercept
     }
-    newYIntercept.x = lastYIntersect.x + blockSize
+    newYIntercept.x = isLeft ? lastYIntersect.x - blockSize : lastYIntersect.x + blockSize
     newYIntercept.y = lastYIntersect.y + yStep
     newYIntercept.dist = Math.sqrt(Math.pow(newYIntercept.x - lastYIntersect.x, 2) + Math.pow(newYIntercept.y - lastYIntersect.y, 2))
     return newYIntercept
-    // isUp ? [yIntercect.x + xStep, yIntersect.y + blockSize] : [yIntersect.x + xStep, yIntersect.y + blockSize]
   }
   this.collide = function () {
 
@@ -108,16 +110,13 @@ function Ray(x, y, direction) {
 
     let xIntersect = this.findXIntersect(this.x, this.y, dy, isUp, 0)
     let yIntersect = this.findYIntersect(this.x, this.y, dx, isLeft, 0)
-    // let yStep = isLeft ? Math.tan(-this.direction) * blockSize : Math.tan(this.direction) * blockSize
-    // let xStep = isUp ? Math.tan((Math.PI / 2 * 3 - -this.direction)) * blockSize : Math.tan((Math.PI / 2 * 3 - this.direction)) * blockSize
-    function invertAngle(angle) {
-      return (angle + Math.PI) % (2 * Math.PI);
-    }
-    // let yStep = isUp ? Math.tan(invertAngle(this.direction)) * blockSize : Math.tan(this.direction) * blockSize
-    // let xStep = isLeft ? Math.tan(invertAngle(Math.PI / 2 - this.direction)) *  blockSize : Math.tan(Math.PI / 2 - this.direction) * blockSize
-    let yStep = Math.atan(this.direction) * blockSize
-    let xStep = Math.atan(Math.PI / 2 - this.direction) *  blockSize
-    //if (isLeft) {xStep = Math.tan(this.direction) * blockSize}
+
+    let xStep = Math.tan(Math.PI / 2 - this.direction) *  blockSize
+    let yStep = Math.tan(this.direction) * blockSize
+    if(isLeft) yStep = -yStep // second and third quadrant
+    if(isUp) xStep = -xStep
+    // let xStep = (1 / yStep)
+    // yStep = yStep * blockSidze
 
 
     function drawSteps(steps) {
@@ -150,10 +149,12 @@ function Ray(x, y, direction) {
       }
     })
 
+    // return xIntersect.dist < yIntersect.dist ? [xIntersect.x, xIntersect.y] : [yIntersect.x, yIntersect.y]
 
     let coords = null
     let i = 0
     while(!coords){
+
       i++
 
       let nextXIntersect = this.getNextXIntersect(xIntersect, xStep, isLeft, isUp)
@@ -173,131 +174,10 @@ function Ray(x, y, direction) {
           yIntersect = nextYIntersect
         }
       }
+
     }
-    console.log(`direction:${this.direction}, xStep:${xStep} , yStep:${yStep} xIntersect.dist:${xIntersect.dist}, yIntersect.dist: ${yIntersect.dist}`)
+    // console.log(`direction:${this.direction}, xStep:${xStep} , yStep:${yStep} xIntersect.dist:${xIntersect.dist}, yIntersect.dist: ${yIntersect.dist}`)
     return coords
-    // return coords
-    // return xIntersect.dist < yIntersect.dist ? [xIntersect.x, xIntersect.y] : [yIntersect.x, yIntersect.y]
+
   }
 }
-    // let coords = null
-    // while(!coords){
-
-    //   if(xIntersect.dist < yIntersect.dist) {
-    //     if(this.hitWallX(xIntersect.x, xIntersect.y)){
-    //       coords = [xIntersect.x, xIntersect.y]
-    //     } else {
-    //       ySkip++
-    //       xIntersect = this.findXIntersect(this.x, this.y, dy, isUp, ySkip)
-    //     }
-    //   }
-    //   else{
-    //     if(this.hitWallY(yIntersect.x, yIntersect.y)){
-    //       coords = [yIntersect.x, yIntersect.y]
-    //     } else{
-    //       xSkip++
-    //       yIntersect = this.findYIntersect(this.x, this.y, dx, isLeft, xSkip)
-    //     }
-    //   }
-    // }
-
-    // return coords
-    // this.findIntersect
-    //  if this.hitWall return coords
-    // else add a skip and run it again until we find one
-
-
-
-
-
-  /*
-    --CODE GRAVEYARD--
-    Here lies my first attempt at ray casting
-  */
-  //   let currentColumn = Math.floor(x / blockSize)
-  //   let currentRow = Math.floor(y / blockSize)
-  //   let left = this.direction > (Math.PI / 2) && this.direction < (Math.PI * 3 / 2)
-  //   let down = this.direction > 0 && this.direction < Math.PI
-  //   let skipColumns = 0
-  //   let skipRows = 0
-
-  //   // find the distance to the next intersection with a vertical line
-  //   function findXDistance(direction, x, y) {
-  //     // don't look for an intersection if the lines are parallell
-  //     if(direction === Math.PI / 2 || direction === 3 * Math.PI / 2) return 999999999999999
-  //     //looking to the left
-  //     if(left) {
-  //       debugger
-  //       let edgeX = (currentColumn - 1) * blockSize + blockSize - (skipColumns * blockSize)
-  //       let distanceToEdge = x - edgeX
-
-  //       return (distanceToEdge / Math.cos(direction))
-  //     } else { // looking right
-  //       // x position of the vertical wall it's intersecting
-  //       let edgeX = ((currentColumn + 1) * blockSize) + (skipColumns * blockSize)
-  //       let distanceToEdge = edgeX - x
-  //       return (distanceToEdge / Math.cos(direction))
-  //     }
-  //   }
-
-  //   // find the distance to the next intersection with a horizontal line
-  //   function findYDistance(direction, x, y) {
-  //     if(direction === 0 || direction === Math.PI) return 999999999999999
-  //     // looking down
-  //     if(down) {
-  //       return (((currentRow + (1 + skipRows)) * blockSize) - y) / Math.sin(direction)
-  //     } else { // looking up
-  //       return (((currentRow - skipRows) * blockSize) - y) / Math.sin(direction)
-  //     }
-  //   }
-
-  //   function findBlock(verticalIntersection, endX, endY) {
-  //     // find what block I'm looking at
-  //     let endColumn
-  //     let endRow
-  //     //looking to the left
-  //     if(left && verticalIntersection) {
-  //       endColumn = Math.floor(endX / blockSize) - 1
-  //     } else{
-  //       endColumn = Math.floor(endX / blockSize)
-  //     }
-  //     // looking down
-  //     if(down) {
-  //       endRow = Math.floor(endY / blockSize)
-  //     } else{
-  //       // if we're looking up and it's a horizontal line subtract one block
-  //       endRow = !verticalIntersection ? Math.floor(endY / blockSize) - 1 : Math.floor(endY / blockSize)
-  //     }
-  //     return [endColumn, endRow]
-  //   }
-
-  //   function getEndPoints(direction, x, y){
-  //     while(true){
-  //       let xDistance = findXDistance(direction, x, y) // horizontal distance to next vertical line intersection
-  //       let yDistance = findYDistance(direction, x, y) // vertical distance to next horizontal line intersection
-  //       shorterDistance = xDistance < yDistance ? xDistance : yDistance // I want to check the shorter one first
-  //       verticalIntersection = xDistance < yDistance // the ray is intersecting with a vertical line
-
-  //       // coordinates for where the ray hits the nearest line
-  //       let endX = x + shorterDistance * Math.cos(direction)
-  //       let endY = y + shorterDistance * Math.sin(direction)
-
-  //       // which block I'm looking at in columns, rows
-  //       let [endColumn, endRow] = findBlock(verticalIntersection, endX, endY)
-
-  //       console.log(`${endColumn} , ${endRow}`)
-
-  //       // is that block a wall
-  //       let isWall = map[endRow * gridSize + endColumn] === 1
-
-  //       if(isWall){
-  //         return [endX, endY]
-  //       } else {
-  //         return [endX, endY]
-  //         if(verticalIntersection) {skipRows++} else{skipColumns++}
-  //       }
-  //     }
-  //   }
-  //   let finalCoords = getEndPoints(this.direction, this.x, this.y)
-  //   return finalCoords
-  // }
