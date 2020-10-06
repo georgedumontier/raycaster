@@ -1,8 +1,11 @@
 function Player(x, y, direction) {
   this.x = x
   this.y = y
+  this.lastX = 0
+  this.lastY = 0
   this.speed = 175
   this.direction = direction
+  this.lastDirection = 0
   this.rotate = function (angle) {
     // Add the extra 360 in case it was negative?
     // % CIRCLE so it's never bigger than 2pi

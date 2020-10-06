@@ -42,12 +42,9 @@
     let in3D = false
     let blockWidth
     let blockHeight
-    let fov = 1
+    let fov = 10
     let player
     let controls
-
-
-
 
     function drawMap() {
       map.forEach((type, i) => {
@@ -65,13 +62,9 @@
 
     function drawPlayer() {
       ctx.save() // saves the original rotation
-
-      // ctx.translate(player.x - 25, player.y) // translate to center(ish) of triangle
-      // ctx.rotate(player.direction) // rotate around the center of the triangle
-      // ctx.translate(-(player.x - 25), -player.y) // translate back to the origin
-      ctx.translate(player.x, player.y)
-      ctx.rotate(player.direction)
-      ctx.translate(-(player.x), -player.y)
+      ctx.translate(player.x, player.y) // move pointer to player position
+      ctx.rotate(player.direction) // rotate canvas
+      ctx.translate(-(player.x), -player.y) // move pointer back to origin
 
       // draw a triangle
       ctx.beginPath()
@@ -87,8 +80,13 @@
 
     function drawRays() {
       for (let i = (-fov / 2); i < (fov / 2); i++) {
-        let ray = new Ray(player.x, player.y, (player.direction + (i * Math.PI / 180)))
+        let rayDirection = (((player.direction + (i * Math.PI / 180)) + CIRCLE) % CIRCLE)
+        let ray = new Ray(player.x, player.y, rayDirection)
+
+        // if (i < (-fov / 2 + 3) && i > (-fov / 2 + 1)) {
         drawRay(ray)
+
+        // }
       }
     }
 
@@ -118,17 +116,31 @@
 
     // Main animation loop
     function animationLoop() {
+      //check if we moved
+
+
       if (!lastTime) { lastTime = now; }
       now = Date.now()
       let dt = now - lastTime
       player.update(dt)
 
       if (!stop) {
-        if (in3D) {
-          draw3D()
-        } else {
-          render2D()
+
+
+        if (player.x === player.lastX && player.lastY === player.y && player.lastDirection === player.direction) {
+          //nothing
+        } else { //render again since we moved or turned
+          player.lastX = player.x
+          player.lastY = player.y
+          player.lastDirection = player.direction
+
+          if (in3D) {
+            draw3D()
+          } else {
+            render2D()
+          }
         }
+
       }
 
       lastTime = Date.now()
@@ -139,7 +151,7 @@
     window.onload = () => {
       window.addEventListener("resize", sizeCanvas, false);
       sizeCanvas();
-      player = new Player(blockSize + 5, blockSize + 5, 0)
+      player = new Player(blockSize + 50, blockSize + 50, 1.712167996206433)
       controls = new Controls()
       // Schedule the main animation loop
       window.requestAnimationFrame(animationLoop);
