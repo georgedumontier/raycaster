@@ -22,6 +22,7 @@
 </head>
 
 <body>
+  <button class="toggle">toggle</button>
   <canvas id="canvas" width="150" height="150"></canvas>
   <script src='Player.js'></script>
   <script src='map.js'></script>
@@ -37,14 +38,25 @@
     let lastTime
     let width
     let height
-    let stop = false
+    let pause = false
     let now = Date.now()
     let in3D = false
     let blockWidth
     let blockHeight
-    let fov = 10
+    let fov = 90
     let player
     let controls
+    let rays = []
+    let columnWidth
+
+    let button = document.querySelector('.toggle')
+    button.addEventListener('click', () => in3D = !in3D)
+
+    function distance(x1, y1, x2, y2) {
+      let a = x1 - x2;
+      let b = y1 - y2;
+      return Math.hypot(a, b)
+    }
 
     function drawMap() {
       map.forEach((type, i) => {
@@ -78,80 +90,74 @@
       ctx.restore() // sets rotation back to where it was when we called save()
     }
 
-    function drawRays() {
+    function castRays() {
+      rays = []
       for (let i = (-fov / 2); i < (fov / 2); i++) {
         let rayDirection = (((player.direction + (i * Math.PI / 180)) + CIRCLE) % CIRCLE)
-        let ray = new Ray(player.x, player.y, rayDirection)
-
-        // if (i < (-fov / 2 + 3) && i > (-fov / 2 + 1)) {
-        drawRay(ray)
-
-        // }
+        let ray = new Ray(rayDirection)
+        rays.push(ray)
+        ray.collide()
       }
     }
 
     function drawRay(ray) {
-      // let endX = ray.x + 1000 * Math.cos(ray.direction)
-      // let endY = ray.y + 1000 * Math.sin(ray.direction)
       let [endX, endY] = ray.collide()
-      // ray.collide()
       ctx.beginPath()
-      ctx.moveTo(ray.x, ray.y)
+      ctx.moveTo(player.x, player.y)
       ctx.lineTo(endX, endY)
       ctx.closePath()
       ctx.strokeStyle = 'red'
       ctx.stroke()
-
     }
 
-
+    function drawColumns() {
+      rays.forEach((ray, i) => {
+        //let distance = (Math.abs(ray.diffX) > Math.abs(ray.diffY)) ? ray.diffX / Math.cos(ray.direction) : ray.diffY / Math.sin(ray.direction)
+        let distance = ray.length
+        ctx.beginPath();
+        //let z = ray.length * Math.cos(ray.direction)
+        let x = i * columnWidth
+        //let columnHeight = (canvas.height - (ray.length))
+        let columnHeight = 30000 / distance
+        let y = (canvas.height / 2) - columnHeight / 2
+        ctx.rect(x, y, columnWidth, columnHeight)
+        //console.log(x, y, columnWidth, columnHeight)
+        ctx.fillStyle = "blue"
+        ctx.closePath()
+        ctx.fill()
+      })
+    }
 
     function render2D() {
       ctx.clearRect(0, 0, width, height);
       drawMap()
       drawPlayer()
-      drawRays()
+      rays.forEach(ray => drawRay(ray))
+    }
 
+    function render3D() {
+      ctx.clearRect(0, 0, width, height);
+      drawColumns()
     }
 
     // Main animation loop
     function animationLoop() {
-      //check if we moved
-
-
-      if (!lastTime) { lastTime = now; }
+      if (!lastTime) lastTime = now
       now = Date.now()
       let dt = now - lastTime
       player.update(dt)
-
-      if (!stop) {
-
-
-        if (player.x === player.lastX && player.lastY === player.y && player.lastDirection === player.direction) {
-          //nothing
-        } else { //render again since we moved or turned
-          player.lastX = player.x
-          player.lastY = player.y
-          player.lastDirection = player.direction
-
-          if (in3D) {
-            draw3D()
-          } else {
-            render2D()
-          }
-        }
-
-      }
-
+      // only calculate rays if we've moved
+      if (!(player.x === player.lastX && player.lastY === player.y && player.lastDirection === player.direction)) castRays()
+      if (in3D) render3D()
+      else render2D()
       lastTime = Date.now()
-      // Schedule the next frame
       window.requestAnimationFrame(animationLoop);
     }
 
     window.onload = () => {
       window.addEventListener("resize", sizeCanvas, false);
       sizeCanvas();
-      player = new Player(blockSize + 50, blockSize + 50, 1.712167996206433)
+      player = new Player(blockSize + blockSize / 2, blockSize + blockSize / 2, (7 * Math.PI) / 4)
       controls = new Controls()
       // Schedule the main animation loop
       window.requestAnimationFrame(animationLoop);
