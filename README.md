@@ -1,1 +1,1 @@
-# raycaster
+# Pure JavaScript Raycaster
