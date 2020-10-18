@@ -1,6 +1,5 @@
 // Called initially and whenever the window resizes to update the canvas
 function sizeCanvas() {
-  console.log(maxMap)
   const mainCanvas = document.getElementById("mainCanvas")
   width = window.innerWidth;
   height = window.innerHeight;
@@ -11,6 +10,7 @@ function sizeCanvas() {
   // mini canvas
   const miniCanvas = document.getElementById("miniCanvas")
   if(maxMap){
+    scale = 1
     miniCanvas.width = width > height ? height : width
     miniCanvas.height = miniCanvas.width
     miniCanvas.style.left = width / 2 - (miniCanvas.width / 2) + 'px'
@@ -18,6 +18,6 @@ function sizeCanvas() {
     miniCanvas.width = 300
     miniCanvas.height = miniCanvas.width
     miniCanvas.style.left = '0px'
-    mcBlockSize = parseInt(mcWidth / gridSize)
+    scale = parseInt(miniCanvas.width / gridSize) / blockSize
   }
 }
