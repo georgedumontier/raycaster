@@ -3,7 +3,7 @@ function Player(x, y, direction) {
   this.y = y
   this.lastX = 0
   this.lastY = 0
-  this.speed = 175
+  this.speed = 100
   this.direction = direction
   this.lastDirection = 0
   this.rotate = function (angle) {
