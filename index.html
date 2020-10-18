@@ -131,9 +131,7 @@
       let lastX = 0
       rays.forEach((ray, i) => {
         ctx.beginPath();
-        // let x = i * columnWidth
         let x = lastX
-        console.log(x)
         // difference between ray angle and player angle
         let angleDif = player.direction - ray.direction
         if (angleDif < 0) angleDif += CIRCLE
