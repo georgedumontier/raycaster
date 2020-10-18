@@ -30,8 +30,7 @@ function Player(x, y, direction) {
       this.lastY = this.y
       this.y = newY
     }
-    // this.x = this.hitWall(newX, this.y) ? this.x : newX
-    // this.y = this.hitWall(this.x, newY) ? this.y : newY
+
   }
   this.update = function (dt) {
     dt = dt / 1000

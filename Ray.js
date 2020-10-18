@@ -79,7 +79,6 @@ function Ray(direction) {
     let i = 0
     let nextXIntersect = xIntersect
     let nextYIntersect = yIntersect
-    // console.log(`${player.x}, ${player.y}, ${player.direction}`)
 
     while (coords === null) {
       i++
@@ -88,8 +87,8 @@ function Ray(direction) {
           this.length = nextXIntersect.dist
           coords = [nextXIntersect.x, nextXIntersect.y]
         } else {
-          if (i > 50) {
-            coords = [0, 0]
+          if (i > viewDistance) {
+            coords = [-1, 0]
           }
           nextXIntersect = this.getNextXIntersect(nextXIntersect, xStep, isUp)
         }
@@ -98,8 +97,8 @@ function Ray(direction) {
           this.length = nextYIntersect.dist
           coords = [nextYIntersect.x, nextYIntersect.y]
         } else {
-          if (i > 50) {
-            coords = [0, 0]
+          if (i > viewDistance) {
+            coords = [-1, 0]
           }
           nextYIntersect = this.getNextYIntersect(nextYIntersect, yStep, isLeft)
         }
@@ -112,7 +111,7 @@ function Ray(direction) {
   }
 }
 
-
+  // HELPFUL FUNCTION FOR DEBUGGING - draws horizontal/vertical lines to nearest intersection
    // function drawSteps(steps) {
 
     //   ctx.beginPath()
