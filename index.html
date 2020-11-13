@@ -41,6 +41,7 @@
     // init variables
     const CIRCLE = Math.PI * 2
     const gridSize = Math.sqrt(map.length)
+    console.log(gridSize)
     const mainCtx = document.getElementById("mainCanvas").getContext("2d")
     const miniCtx = document.getElementById("miniCanvas").getContext("2d")
     let lastTime
@@ -60,6 +61,22 @@
     let controls
     let rays = []
     let scale // used to adjust drawing onto mini canvas
+    let cat
+    let catImage
+
+    function Cat(x, y) {
+      this.x = x
+      this.y = y
+    }
+
+    function radiansToDegrees(radians) {
+      return radians * (180 / Math.PI)
+    }
+    function degreesToRadians(degrees) {
+      return degrees * (Math.PI / 180)
+    }
+
+
 
     window.addEventListener('click', () => {
       maxMap = !maxMap
@@ -130,7 +147,7 @@
       let columnWidth = canvas.width / fov
       let lastX = 0
       rays.forEach((ray, i) => {
-        ctx.beginPath();
+        ctx.beginPath()
         let x = lastX
         // difference between ray angle and player angle
         let angleDif = player.direction - ray.direction
@@ -138,12 +155,59 @@
         if (angleDif > CIRCLE) angleDif -= CIRCLE
         let columnHeight = blockSize * height / (Math.cos(angleDif) * ray.length)
         let y = (canvas.height / 2) - columnHeight / 2
-        ctx.rect(x, y, columnWidth + 1, columnHeight)
         ctx.fillStyle = "blue"
+        ctx.fillRect(x, y, columnWidth + 1, columnHeight)
         ctx.closePath()
-        ctx.fill()
         lastX += columnWidth
       })
+    }
+
+    function drawCat2d(ctx) {
+      ctx.beginPath()
+      ctx.arc(cat.x * scale, cat.y * scale, scale * blockSize / 4, 0, 2 * Math.PI)
+      ctx.fillStyle = 'black'
+      ctx.fill()
+      ctx.stroke()
+      ctx.closePath()
+    }
+
+    function drawCat(ctx) {
+      let columnWidth = mainCanvas.width / fov
+      let distanceToCat = distance(player.x, player.y, cat.x, cat.y)
+      let a = cat.x - player.x
+
+      /* THERE HAS TO BE A BETTER WAY TO DO THIS */
+      // catAngle is the value in radians of the angle between the player and the cat. To account for Canvas's backwardMath.acos(a / distanceToCat) y axis, we have to check if we're inverted
+      let catAngle = player.y > cat.y ? CIRCLE - Math.acos(a / distanceToCat) : Math.acos(a / distanceToCat)
+
+      let angleDif = catAngle - player.direction // the number of degrees to the right or left of player.direction
+      if (Math.abs(angleDif) > Math.PI) { // if it's more than 180, we need to measure the other direction
+        angleDif = angleDif < 0 // if we're negative
+          ? CIRCLE + angleDif // add 2pi to get to the opposite angle (aka the shorter direction)
+          : player.y < cat.y // if we're not inverted
+            ? CIRCLE - angleDif // subtract angleDif from 2pi to get the shorter route
+            : -(CIRCLE - angleDif) // or the negative version of that
+        // nested ternaries are fine
+      }
+      // console.log(`a: ${a}, distanceToCat: ${distanceToCat}, playerDirection: ${radiansToDegrees(player.direction)}, catAngle: ${radiansToDegrees(catAngle)}, angleDif: ${radiansToDegrees(angleDif)}`)
+      if (Math.abs(radiansToDegrees(angleDif)) < (fov / 2)) {//abs value less than 45 deg
+        console.log(`${rays[Math.floor(fov / 2 + (radiansToDegrees(angleDif)))].length}`)
+        if (rays[Math.floor(fov / 2 + (radiansToDegrees(angleDif)))].length < distanceToCat) return false
+
+        let catScale = blockSize * height / distanceToCat
+        let catHeight = .5 * catScale
+        let catWidth = .5 * catScale
+        let x = (fov / 2 + (radiansToDegrees(angleDif))) * columnWidth - (catWidth / 2)
+        let y = height / 2 //- (catHeight / 2) +  // cente of square is center of screen
+        ctx.save()
+        ctx.drawImage(catImage, x, y, catWidth, catHeight)
+        ctx.closePath()
+
+      } else {
+        // can't see the kitty
+      }
+
+
     }
 
     function render2D(ctx, canvas) {
@@ -152,6 +216,7 @@
       ctx.fillRect(0, 0, blockSize * gridSize * scale, blockSize * gridSize * scale)
       drawMap(ctx)
       drawPlayer(ctx)
+      drawCat2d(ctx)
       rays.forEach(ray => drawRay(ray, ctx))
     }
 
@@ -164,6 +229,7 @@
       ctx.fillStyle = "#beeeef"
       ctx.fillRect(0, 0, canvas.width, canvas.height / 2)
       drawColumns(ctx)
+      drawCat(ctx)
     }
 
     // function drawUI() {
@@ -195,7 +261,10 @@
       window.addEventListener("resize", sizeCanvas, false);
       sizeCanvas();
       player = new Player(blockSize * gridSize - blockSize - blockSize / 2, blockSize * gridSize - blockSize - blockSize / 2, 5 * Math.PI / 4)
+      cat = new Cat(blockSize * gridSize - blockSize - blockSize / 2 - 100, blockSize * gridSize - blockSize - blockSize / 2 - 100)
       controls = new Controls()
+      catImage = new Image()
+      catImage.src = "img/cursed-cat.png"
       // Schedule the main animation loop
       window.requestAnimationFrame(animationLoop);
     };

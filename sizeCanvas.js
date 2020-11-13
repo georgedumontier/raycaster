@@ -4,6 +4,7 @@ function sizeCanvas() {
   width = window.innerWidth;
   height = window.innerHeight;
   blockSize = height > width ? parseInt(width / gridSize) : parseInt(height / gridSize) // how big are the grid squares
+  console.log(blockSize)
   mainCanvas.width = width
   mainCanvas.height = height
 
